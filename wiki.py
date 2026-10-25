@@ -1,7 +1,9 @@
+from collections import deque
+
 import requests
 
 API_URL = "https://en.wikipedia.org/w/api.php"
-HEADERS = {"User-Agent": "SixDegreesOfWikipedia/1.0 (your-email@scu.edu)"}
+HEADERS = {"User-Agent": "SixDegreesOfWikipedia/1.0 (rconrad@scu.edu)"}
 TIMEOUT = 10
 
 
@@ -48,3 +50,36 @@ def get_links(title):
             break
         params.update(data["continue"])
     return links
+
+
+def find_path(start, end, max_articles=300):
+    """Use breadth-first search to find the shortest chain of links from start to end."""
+    if start == end:
+        return {"path": [start], "articles_checked": 0}
+
+    queue = deque([start])
+    visited = {start}
+    parent = {start: None}
+    articles_checked = 0
+
+    while queue and articles_checked < max_articles:
+        current = queue.popleft()
+        links = get_links(current)
+        articles_checked += 1
+
+        for link in links:
+            if link in visited:
+                continue
+            visited.add(link)
+            parent[link] = current
+            if link == end:
+                path = []
+                node = end
+                while node is not None:
+                    path.append(node)
+                    node = parent[node]
+                path.reverse()
+                return {"path": path, "articles_checked": articles_checked}
+            queue.append(link)
+
+    return {"path": None, "articles_checked": articles_checked}
