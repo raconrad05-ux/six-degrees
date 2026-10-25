@@ -59,3 +59,7 @@ The current find_path() is too slow: Peter Griffin → Assassination of Archduke
 3. Make requests one at a time (no parallel requests) to stay polite to Wikipedia.
 
 Keep app.py working without changes if possible. Test with SCU → Silicon Valley, SCU → Napoleon, and Peter Griffin → Assassination of Archduke Franz Ferdinand, and report the path, articles checked and seconds for each. Explain why expanding the smaller side first matters.
+
+## Step 7b: Stop at the first meeting
+
+Change find_path() to stop as soon as the two searches meet instead of finishing the layer. Explain in two sentences why the path is still guaranteed shortest. Then rerun the Peter Griffin → Assassination of Archduke Franz Ferdinand test and report the new time.

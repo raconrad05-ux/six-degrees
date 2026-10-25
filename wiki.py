@@ -118,11 +118,10 @@ def find_path(start, end, max_articles=300, max_seconds=60):
     if start == end:
         return {"path": [start], "articles_checked": 0}
 
-    forward = {"fetch": get_links, "parent": {start: None}, "depth": {start: 0}, "frontier": [start]}
-    backward = {"fetch": get_backlinks, "parent": {end: None}, "depth": {end: 0}, "frontier": [end]}
+    forward = {"fetch": get_links, "parent": {start: None}, "frontier": [start]}
+    backward = {"fetch": get_backlinks, "parent": {end: None}, "frontier": [end]}
     articles_checked = 0
     began = time.monotonic()
-    best_length = None
     meeting = None
     out_of_budget = False
 
@@ -145,13 +144,12 @@ def find_path(start, end, max_articles=300, max_seconds=60):
                 if neighbor in side["parent"]:
                     continue
                 side["parent"][neighbor] = current
-                side["depth"][neighbor] = side["depth"][current] + 1
                 next_frontier.append(neighbor)
                 if neighbor in other["parent"]:
-                    length = side["depth"][neighbor] + other["depth"][neighbor]
-                    if best_length is None or length < best_length:
-                        best_length = length
-                        meeting = neighbor
+                    meeting = neighbor
+                    break
+            if meeting is not None:
+                break
         side["frontier"] = next_frontier
 
     if meeting is None:
