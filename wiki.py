@@ -1,4 +1,4 @@
-from collections import deque
+import time
 
 import requests
 
@@ -72,34 +72,89 @@ def get_links(title):
     return links
 
 
-def find_path(start, end, max_articles=300):
-    """Use breadth-first search to find the shortest chain of links from start to end."""
+def get_backlinks(title, max_links=2500):
+    """Return a list of article titles that link to the given article, up to max_links."""
+    params = {
+        "action": "query",
+        "list": "backlinks",
+        "bltitle": title,
+        "blnamespace": 0,
+        "blredirect": 1,
+        "bllimit": "max",
+        "format": "json",
+        "formatversion": 2,
+    }
+    backlinks = []
+    while len(backlinks) < max_links:
+        data = api_get(params)
+        for page in data.get("query", {}).get("backlinks", []):
+            backlinks.append(page["title"])
+            # Articles that link through a redirect (e.g. "USA") are listed under it.
+            for redirect_link in page.get("redirlinks", []):
+                backlinks.append(redirect_link["title"])
+        if "continue" not in data:
+            break
+        params.update(data["continue"])
+    return backlinks[:max_links]
+
+
+def build_path(meeting, forward_parent, backward_parent):
+    """Join the forward chain (start to meeting) with the backward chain (meeting to end)."""
+    path = []
+    node = meeting
+    while node is not None:
+        path.append(node)
+        node = forward_parent[node]
+    path.reverse()
+    node = backward_parent[meeting]
+    while node is not None:
+        path.append(node)
+        node = backward_parent[node]
+    return path
+
+
+def find_path(start, end, max_articles=300, max_seconds=60):
+    """Use bidirectional breadth-first search to find the shortest chain of links from start to end."""
     if start == end:
         return {"path": [start], "articles_checked": 0}
 
-    queue = deque([start])
-    visited = {start}
-    parent = {start: None}
+    forward = {"fetch": get_links, "parent": {start: None}, "depth": {start: 0}, "frontier": [start]}
+    backward = {"fetch": get_backlinks, "parent": {end: None}, "depth": {end: 0}, "frontier": [end]}
     articles_checked = 0
+    began = time.monotonic()
+    best_length = None
+    meeting = None
+    out_of_budget = False
 
-    while queue and articles_checked < max_articles:
-        current = queue.popleft()
-        links = get_links(current)
-        articles_checked += 1
+    while forward["frontier"] and backward["frontier"] and meeting is None and not out_of_budget:
+        # Expand one full layer of whichever side has the smaller frontier.
+        if len(forward["frontier"]) <= len(backward["frontier"]):
+            side, other = forward, backward
+        else:
+            side, other = backward, forward
 
-        for link in links:
-            if link in visited:
-                continue
-            visited.add(link)
-            parent[link] = current
-            if link == end:
-                path = []
-                node = end
-                while node is not None:
-                    path.append(node)
-                    node = parent[node]
-                path.reverse()
-                return {"path": path, "articles_checked": articles_checked}
-            queue.append(link)
+        next_frontier = []
+        for current in side["frontier"]:
+            if articles_checked >= max_articles or time.monotonic() - began >= max_seconds:
+                out_of_budget = True
+                break
+            neighbors = side["fetch"](current)
+            articles_checked += 1
 
-    return {"path": None, "articles_checked": articles_checked}
+            for neighbor in neighbors:
+                if neighbor in side["parent"]:
+                    continue
+                side["parent"][neighbor] = current
+                side["depth"][neighbor] = side["depth"][current] + 1
+                next_frontier.append(neighbor)
+                if neighbor in other["parent"]:
+                    length = side["depth"][neighbor] + other["depth"][neighbor]
+                    if best_length is None or length < best_length:
+                        best_length = length
+                        meeting = neighbor
+        side["frontier"] = next_frontier
+
+    if meeting is None:
+        return {"path": None, "articles_checked": articles_checked}
+    path = build_path(meeting, forward["parent"], backward["parent"])
+    return {"path": path, "articles_checked": articles_checked}
