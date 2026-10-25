@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}{{ start }} to {{ end }} | Six Degrees of Wikipedia{% endblock %}
+
+{% block content %}
+<h2>{{ start }} → {{ end }}</h2>
+
+{% if chain %}
+<ol>
+  {% for title, url in chain %}
+  <li><a href="{{ url }}" target="_blank" rel="noopener">{{ title }}</a></li>
+  {% endfor %}
+</ol>
+{% else %}
+<p><strong>No path was found within the search limit.</strong></p>
+{% endif %}
+
+<p class="stats">Checked {{ articles_checked }} articles in {{ seconds }} seconds.</p>
+
+<p><a href="{{ url_for('home') }}">Try another pair</a></p>
+{% endblock %}

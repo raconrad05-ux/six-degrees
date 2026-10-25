@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p>
+  Enter two Wikipedia articles and this app will find the shortest chain of links
+  from the first to the second, following only links inside each article.
+</p>
+
+<form action="{{ url_for('path') }}" method="get">
+  <label for="start">Start article</label>
+  <input type="text" id="start" name="start" placeholder="Santa Clara University" required>
+
+  <label for="end">End article</label>
+  <input type="text" id="end" name="end" placeholder="Silicon Valley" required>
+
+  <button type="submit">Find path</button>
+</form>
+{% endblock %}
