@@ -6,12 +6,16 @@
   from the first to the second, following only links inside each article.
 </p>
 
+{% if error %}
+<div class="message error" role="alert">{{ error }}</div>
+{% endif %}
+
 <form action="{{ url_for('path') }}" method="get">
   <label for="start">Start article</label>
-  <input type="text" id="start" name="start" placeholder="Santa Clara University" required>
+  <input type="text" id="start" name="start" value="{{ start }}" placeholder="Santa Clara University" required>
 
   <label for="end">End article</label>
-  <input type="text" id="end" name="end" placeholder="Silicon Valley" required>
+  <input type="text" id="end" name="end" value="{{ end }}" placeholder="Silicon Valley" required>
 
   <button type="submit">Find path</button>
 </form>

@@ -5,6 +5,10 @@
 {% block content %}
 <h2>{{ start }} → {{ end }}</h2>
 
+{% for note in notes %}
+<div class="message note">{{ note }}</div>
+{% endfor %}
+
 {% if chain %}
 <ol>
   {% for title, url in chain %}
@@ -12,7 +16,7 @@
   {% endfor %}
 </ol>
 {% else %}
-<p><strong>No path was found within the search limit.</strong></p>
+<div class="message error">No path was found within the search limit.</div>
 {% endif %}
 
 <p class="stats">Checked {{ articles_checked }} articles in {{ seconds }} seconds.</p>

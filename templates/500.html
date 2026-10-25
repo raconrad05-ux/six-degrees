@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Something went wrong | Six Degrees of Wikipedia{% endblock %}
+
+{% block content %}
+<h2>Something went wrong</h2>
+<div class="message error">The app ran into an unexpected problem. Please try again.</div>
+<p><a href="{{ url_for('home') }}">Back to the home page</a></p>
+{% endblock %}
