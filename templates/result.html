@@ -19,7 +19,14 @@
 <div class="message error">No path was found within the search limit.</div>
 {% endif %}
 
-<p class="stats">Checked {{ articles_checked }} articles in {{ seconds }} seconds.</p>
+<ul class="stats">
+  {% if chain %}
+  {% set links = chain|length - 1 %}
+  <li>{{ links }} link{{ "" if links == 1 else "s" }}</li>
+  {% endif %}
+  <li>Checked {{ articles_checked }} article{{ "" if articles_checked == 1 else "s" }}</li>
+  <li>{{ seconds }} seconds</li>
+</ul>
 
 <p><a href="{{ url_for('home') }}">Try another pair</a></p>
 {% endblock %}

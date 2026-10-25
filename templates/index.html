@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% set examples = [
+  ("Santa Clara University", "Napoleon"),
+  ("Peter Griffin", "Assassination of Archduke Franz Ferdinand"),
+  ("Taylor Swift", "Albert Einstein"),
+] %}
+
 {% block content %}
 <p>
   Enter two Wikipedia articles and this app will find the shortest chain of links
@@ -10,13 +16,43 @@
 <div class="message error" role="alert">{{ error }}</div>
 {% endif %}
 
-<form action="{{ url_for('path') }}" method="get">
+<form id="search-form" action="{{ url_for('path') }}" method="get">
   <label for="start">Start article</label>
   <input type="text" id="start" name="start" value="{{ start }}" placeholder="Santa Clara University" required>
 
   <label for="end">End article</label>
   <input type="text" id="end" name="end" value="{{ end }}" placeholder="Silicon Valley" required>
 
-  <button type="submit">Find path</button>
+  <button type="submit" id="search-button">Find path</button>
 </form>
+
+<div id="searching" class="message note" role="status" hidden>
+  Searching Wikipedia from both ends… this can take up to a minute.
+</div>
+
+<h3>Try an example</h3>
+<ul class="examples">
+  {% for example_start, example_end in examples %}
+  <li><a class="example" href="{{ url_for('path', start=example_start, end=example_end) }}">{{ example_start }} → {{ example_end }}</a></li>
+  {% endfor %}
+</ul>
+
+<script>
+  const button = document.getElementById("search-button");
+  const searching = document.getElementById("searching");
+
+  function showSearching() {
+    button.disabled = true;
+    searching.hidden = false;
+  }
+
+  document.getElementById("search-form").addEventListener("submit", showSearching);
+  document.querySelectorAll(".example").forEach(link => link.addEventListener("click", showSearching));
+
+  // Reset if the user comes back to this page with the Back button.
+  window.addEventListener("pageshow", () => {
+    button.disabled = false;
+    searching.hidden = true;
+  });
+</script>
 {% endblock %}
